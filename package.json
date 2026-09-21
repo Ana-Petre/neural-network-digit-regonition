@@ -1,0 +1,13 @@
+{
+  "name": "neural-network-mnist",
+  "version": "1.0.0",
+  "description": "A neural network built from scratch in JavaScript (no ML libraries) to recognize handwritten digits (MNIST), with a live browser demo.",
+  "main": "network.js",
+  "scripts": {
+    "train": "node train.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "mnist": "^1.1.0"
+  }
+}

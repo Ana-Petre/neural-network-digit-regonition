@@ -1,0 +1,3 @@
+node_modules/
+web/weights.json
+web/training-log.json
