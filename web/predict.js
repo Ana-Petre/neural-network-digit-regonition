@@ -1,10 +1,5 @@
-/**
- * predict.js
- * -----------------------------------------------------------------------
- * Loads the trained weights (produced by `node train.js`) and exposes a
- * ready-to-use Network instance. Complete — no TODOs, just plumbing that
- * reuses the Network class you implemented in network.js.
- * -----------------------------------------------------------------------
+/*
+ Loads the trained weights (produced by node train.js)
  */
 
 let trainedNetwork = null;

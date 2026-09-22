@@ -1,116 +1,99 @@
-/**
- * network.js
- * -----------------------------------------------------------------------
- * A simple feedforward neural network, from scratch:
- *
- *   input (784) --[fully connected + ReLU]--> hidden (H) --[fully connected + softmax]--> output (10)
- *
- * This file is the heart of the project (Day 3 + Day 4 of the plan).
- * The plumbing (constructor, save/load) is done for you; forward() and
- * backward() are TODOs — that's the actual learning.
- *
- * Works unmodified in both Node (training, via train.js) and the browser
- * (prediction, via web/predict.js) as long as the bundler/script setup
- * exposes `Network` — see web/index.html for how it's loaded there.
- * -----------------------------------------------------------------------
- */
-
-// Works both in Node (require) and in a plain <script> tag in the browser,
-// where matrix.js and activations.js have already attached themselves to
-// window.Matrix / window.Activations (just load those two <script> tags
-// before this one — see web/index.html).
+// works both in Node (require) and in a plain <script> tag in the browser,
+// where matrix.js and activations.js already attached themselves to
+// window.Matrix / window.Activations (see web/index.html)
 const Matrix = typeof module !== "undefined" && module.exports ? require("./matrix") : window.Matrix;
 const Activations = typeof module !== "undefined" && module.exports ? require("./activations") : window.Activations;
 
-const { randomMatrix, zeros, matVecMul, addVectors, subtractVectors, elementwiseMul, outer, transpose } = Matrix;
-const { reluVector, reluDerivativeVector, softmax } = Activations;
+if (typeof module !== "undefined" && module.exports) {
+  var { randomMatrix, zeros, matVecMul, addVectors, subtractVectors, elementwiseMul, outer, transpose } = Matrix;
+  var { reluVector, reluDerivativeVector, softmax } = Activations;
+}
 
 class Network {
-  /**
-   * @param {number} inputSize  - e.g. 784 (28x28 pixels)
-   * @param {number} hiddenSize - e.g. 32 neurons in the hidden layer
-   * @param {number} outputSize - e.g. 10 (digits 0-9)
-   */
   constructor(inputSize, hiddenSize, outputSize) {
     this.inputSize = inputSize;
     this.hiddenSize = hiddenSize;
     this.outputSize = outputSize;
 
-    // weightsIH: one row per hidden neuron, one column per input pixel.
-    // Small random init (see matrix.js randomMatrix comment for why).
+    // weightsIH: one row per hidden neuron, one column per input pixel
     this.weightsIH = randomMatrix(hiddenSize, inputSize, 1 / Math.sqrt(inputSize));
     this.biasesH = new Array(hiddenSize).fill(0);
 
-    // weightsHO: one row per output neuron, one column per hidden neuron.
+    // weightsHO: one row per output neuron, one column per hidden neuron
     this.weightsHO = randomMatrix(outputSize, hiddenSize, 1 / Math.sqrt(hiddenSize));
     this.biasesO = new Array(outputSize).fill(0);
   }
 
-  /**
-   * TODO (Day 3): Forward pass.
-   *
-   * Given a 784-length input vector, compute and return an object with
-   * everything backward() will need later:
-   *
-   *   {
-   *     input,                 // the input vector itself (needed for the weight gradient of layer 1)
-   *     hiddenWeightedSum,     // weightsIH · input + biasesH   (before activation)
-   *     hiddenActivation,      // relu(hiddenWeightedSum)
-   *     outputWeightedSum,     // weightsHO · hiddenActivation + biasesO
-   *     outputActivation,      // softmax(outputWeightedSum) — the final prediction (10 probabilities)
-   *   }
-   *
-   * Use matVecMul + addVectors from matrix.js, and reluVector / softmax
-   * from activations.js. Don't skip returning the intermediate values —
-   * backward() needs every one of them.
-   */
+  // forward pass: pushes the input through both layers and returns every
+  // intermediate value, because trainOne() needs all of them to compute
+  // gradients later. steps:
+  //   1. hidden layer weighted sum = weightsIH · input + biasesH
+  //   2. hidden layer activation = relu(weighted sum)
+  //   3. output layer weighted sum = weightsHO · hiddenActivation + biasesO
+  //   4. output layer activation = softmax(weighted sum) -> the 10 probabilities
   forward(input) {
-    // TODO: implement
+    let hiddenWeightedSum = Matrix.addVectors(matVecMul(this.weightsIH, input), this.biasesH);
+    let hiddenActivation = Activations.reluVector(hiddenWeightedSum);
+    let outputWeightedSum = Matrix.addVectors(matVecMul(this.weightsHO, hiddenActivation), this.biasesO);
+    let outputActivation = softmax(outputWeightedSum);
+
+    return {
+      input,
+      hiddenWeightedSum,
+      hiddenActivation,
+      outputWeightedSum,
+      outputActivation,
+    };
   }
 
-  /**
-   * TODO (Day 4): Backpropagation + gradient descent for ONE training example.
-   *
-   * @param {number[]} input  - 784-length input vector
-   * @param {number[]} target - 10-length one-hot vector, e.g. digit "3" -> [0,0,0,1,0,0,0,0,0,0]
-   * @param {number} learningRate - e.g. 0.1
-   * @returns {number} the loss for this example (for logging progress) — see note below
-   *
-   * Steps:
-   *  1. Run forward(input) to get all intermediate values.
-   *  2. Output layer error:
-   *       With softmax output + cross-entropy loss, the gradient of the
-   *       loss with respect to the output layer's WEIGHTED SUM (not the
-   *       activation!) simplifies beautifully to just:
-   *           outputError = outputActivation - target
-   *       (This is a well-known identity — you can take it as given here,
-   *       but if you want to see WHY it simplifies this way, that's a
-   *       great thing to look up and understand for your README / for
-   *       explaining this project at an interview.)
-   *  3. Gradient for weightsHO: outer(outputError, hiddenActivation)
-   *     Gradient for biasesO:   outputError
-   *  4. Propagate error back into the hidden layer:
-   *       hiddenError = transpose(weightsHO) · outputError,
-   *       then multiply elementwise by reluDerivativeVector(hiddenWeightedSum)
-   *     (`transpose` is already imported at the top of this file.)
-   *  5. Gradient for weightsIH: outer(hiddenError, input)
-   *     Gradient for biasesH:   hiddenError
-   *  6. Update every weight/bias by subtracting (learningRate * gradient).
-   *     Do this in place on this.weightsIH, this.biasesH, this.weightsHO, this.biasesO.
-   *  7. Return the loss, e.g. cross-entropy:
-   *       -sum(target[i] * Math.log(outputActivation[i] + 1e-12))
-   *     (the `+ 1e-12` avoids log(0))
-   */
+  // one training step (forward + backprop + gradient descent) on a single example.
+  // steps:
+  //   1. forward pass, keep every intermediate value
+  //   2. outputError = prediction - target -> how wrong each output neuron was
+  //      (softmax + cross-entropy simplifies to exactly this, known identity)
+  //   3. output layer gradients: outer(outputError, hiddenActivation) for the
+  //      weights, outputError itself for the biases
+  //   4. push the error back into the hidden layer: multiply by weightsHO
+  //      transposed, then zero out through neurons that relu had already
+  //      cut off (reluDerivativeVector)
+  //   5. hidden layer gradients: same idea, outer(hiddenError, input)
+  //   6. update every weight/bias: subtract learningRate * gradient
+  //   7. return the loss (cross-entropy) so train() can log progress
   trainOne(input, target, learningRate) {
-    // TODO: implement
+    const inter = this.forward(input); // getting all the intermediate values
+    const outputError = subtractVectors(inter.outputActivation, target);
+
+    const gradWeight = outer(outputError, inter.hiddenActivation);
+    const gradBiasesO = outputError;
+
+    const hiddenError = elementwiseMul(
+      matVecMul(transpose(this.weightsHO), outputError),
+      reluDerivativeVector(inter.hiddenWeightedSum)
+    );
+
+    const gradWeightsIH = outer(hiddenError, inter.input);
+    const gradBiasesH = hiddenError;
+
+    for (let i = 0; i < this.weightsHO.length; i++) {
+      this.biasesO[i] -= learningRate * gradBiasesO[i];
+      for (let j = 0; j < this.weightsHO[0].length; j++) {
+        this.weightsHO[i][j] -= learningRate * gradWeight[i][j];
+      }
+    }
+
+    for (let i = 0; i < this.weightsIH.length; i++) {
+      this.biasesH[i] -= learningRate * gradBiasesH[i];
+      for (let j = 0; j < this.weightsIH[0].length; j++) {
+        this.weightsIH[i][j] -= learningRate * gradWeightsIH[i][j];
+      }
+    }
+
+    return -target.reduce((sum, t, i) => sum + t * Math.log(inter.outputActivation[i] + 1e-12), 0);
   }
 
-  /**
-   * Train on a full dataset for a number of epochs. Already implemented —
-   * it just calls trainOne() in a loop and logs progress. Shuffle each
-   * epoch so the network doesn't see examples in the same fixed order
-   * every time (that can bias learning).
-   */
+  // trains on a full dataset for a number of epochs. calls trainOne() in a
+  // loop, reshuffling each epoch so the network doesn't always see examples
+  // in the same order (that can bias learning)
   train(examples, { epochs = 5, learningRate = 0.1, onEpochEnd } = {}) {
     for (let epoch = 0; epoch < epochs; epoch++) {
       const shuffled = [...examples].sort(() => Math.random() - 0.5);
@@ -123,10 +106,8 @@ class Network {
     }
   }
 
-  /**
-   * Predict the digit (0-9) for a single input vector.
-   * Already implemented, built on top of your forward().
-   */
+  // predicts the digit for one input: run forward(), pick the index with
+  // the highest probability
   predict(input) {
     const { outputActivation } = this.forward(input);
     let best = 0;
@@ -136,10 +117,7 @@ class Network {
     return { digit: best, probabilities: outputActivation };
   }
 
-  /**
-   * Accuracy over a labeled dataset (each example has .input and .output
-   * as a one-hot vector). Already implemented.
-   */
+  // accuracy over a labeled dataset: percentage of examples predicted correctly
   evaluate(examples) {
     let correct = 0;
     for (const { input, output } of examples) {
@@ -150,7 +128,7 @@ class Network {
     return correct / examples.length;
   }
 
-  /** Serialize weights/biases to a plain object, for saving to JSON. */
+  // dumps weights/biases to a plain object, for saving to JSON
   toJSON() {
     return {
       inputSize: this.inputSize,
@@ -163,7 +141,7 @@ class Network {
     };
   }
 
-  /** Rebuild a Network instance from a plain object (see toJSON above). */
+  // rebuilds a Network from a plain object (see toJSON above)
   static fromJSON(obj) {
     const net = new Network(obj.inputSize, obj.hiddenSize, obj.outputSize);
     net.weightsIH = obj.weightsIH;

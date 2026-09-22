@@ -1,10 +1,7 @@
-/**
- * main.js
- * -----------------------------------------------------------------------
- * Wires everything together: loads the trained network, updates the
- * prediction UI whenever the user draws, and renders the training-loss
- * chart. Complete — no TODOs.
- * -----------------------------------------------------------------------
+/* Wires everything together: loads the trained network, updates the
+ prediction UI whenever the user draws, and renders the training-loss
+ chart. Complete — no TODOs.
+
  */
 
 const statusEl = document.getElementById("status");
@@ -55,7 +52,7 @@ loadTrainedNetwork().then((net) => {
   }
 });
 
-// --- Training loss chart -------------------------------------------------
+
 
 async function renderLossChart() {
   const canvas = document.getElementById("lossCanvas");

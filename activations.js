@@ -1,60 +1,35 @@
-/**
- * activations.js
- * -----------------------------------------------------------------------
- * Activation functions for the hidden layer (ReLU) and output layer
- * (softmax), plus the derivative ReLU needs for backpropagation.
- * -----------------------------------------------------------------------
- */
+// activations.js
+// relu for the hidden layer, softmax for the output layer, + relu's derivative for backprop
 
-/**
- * TODO (Day 3): ReLU applied to a single number.
- *   relu(x) = max(0, x)
- */
+// relu(x) = max(0, x) -> kills negative values, keeps positive ones as is
 function relu(x) {
-  // TODO: implement
+  return Math.max(0, x);
 }
 
-/**
- * TODO (Day 3): Apply relu() to every element of a vector.
- * Hint: vec.map(...)
- */
+// applies relu to every index of the vector, returns a new vec
 function reluVector(vec) {
-  // TODO: implement
+  return vec.map(relu);
 }
 
-/**
- * TODO (Day 4, backprop): Derivative of ReLU.
- *   reluDerivative(x) = 1 if x > 0, else 0
- */
+// slope of relu: 1 where x was positive, 0 where it was cut to zero
+// needed in backprop to know how much error passes back through a neuron
 function reluDerivative(x) {
-  // TODO: implement
+  if (x > 0) return 1;
+  else return 0;
 }
 
-/**
- * TODO (Day 4, backprop): Apply reluDerivative() to every element of a vector.
- */
 function reluDerivativeVector(vec) {
-  // TODO: implement
+  return vec.map(reluDerivative);
 }
 
-/**
- * TODO (Day 3): Softmax turns a vector of raw scores into a probability
- * distribution — all values in (0, 1), summing to 1. Used on the output
- * layer so the 10 outputs can be read as "probability it's this digit".
- *
- *   softmax(x)_i = exp(x_i) / sum(exp(x_j) for all j)
- *
- * IMPORTANT numerical-stability trick: subtract the max value in the
- * vector from every element BEFORE calling Math.exp(). This does not
- * change the mathematical result (it cancels out in the division) but
- * prevents Math.exp() from overflowing to Infinity on larger inputs.
- *
- *   const m = Math.max(...x);
- *   const shifted = x.map(v => v - m);
- *   // then exponentiate `shifted`, not `x`
- */
+// turns the 10 raw output scores into probabilities that sum to 1
+// softmax(x)_i = exp(x_i) / sum(exp(x_j))
 function softmax(vec) {
-  // TODO: implement (remember the max-subtraction trick above)
+  const m = Math.max(...vec); // ... = spread operator, splits the vec into individual args
+  const shifted = vec.map((v) => v - m); // subtract max first so exp() doesn't blow up to Infinity
+  const exps = shifted.map((v) => Math.exp(v));
+  const sum = exps.reduce((a, b) => a + b, 0); // reduce = collapses all elements into one (the sum)
+  return exps.map((v) => v / sum);
 }
 
 const ActivationsLib = {

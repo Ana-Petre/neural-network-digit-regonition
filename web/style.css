@@ -1,5 +1,5 @@
 :root {
-  --navy: #1f3864;
+  --purple: #8e3992;
   --bg: #f7f8fa;
   --card: #ffffff;
   --border: #e0e3e8;
@@ -11,7 +11,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
   background: var(--bg);
   color: var(--text);
 }
@@ -23,7 +23,7 @@ main {
 }
 
 h1 {
-  color: var(--navy);
+  color: var(--purple);
   margin-bottom: 4px;
 }
 
@@ -54,7 +54,7 @@ section {
 h2 {
   margin-top: 0;
   font-size: 16px;
-  color: var(--navy);
+  color: var(--purple);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -74,7 +74,7 @@ canvas#drawCanvas {
 }
 
 button {
-  background: var(--navy);
+  background: var(--purple);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -95,7 +95,7 @@ button:hover {
 .predicted-digit {
   font-size: 96px;
   font-weight: bold;
-  color: var(--navy);
+  color: var(--purple);
   text-align: center;
   line-height: 1;
   margin: 12px 0 20px;
@@ -130,7 +130,7 @@ button:hover {
 }
 
 .bar-fill {
-  background: var(--navy);
+  background: var(--purple);
   height: 100%;
   width: 0%;
   transition: width 0.15s ease;
