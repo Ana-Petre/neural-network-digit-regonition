@@ -1,15 +1,4 @@
-/**
- * test-matrix.js
- * -----------------------------------------------------------------------
- * Sanity checks for matrix.js, in the same spirit as the checker scripts
- * from your OS assignments (make check). Run with:
- *
- *   node test-matrix.js
- *
- * Implement matrix.js one function at a time and re-run this after each
- * one — don't try to write all of matrix.js before testing anything.
- * -----------------------------------------------------------------------
- */
+// unit tests for matrix.js — run with: node test-matrix.js
 
 const {
   dot,

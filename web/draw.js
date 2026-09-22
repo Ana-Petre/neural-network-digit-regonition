@@ -1,14 +1,5 @@
-/**
- * draw.js
- * -----------------------------------------------------------------------
- * Handles the 280x280 drawing canvas and converts what's drawn into a
- * 28x28 pixel array (784 values, 0-1) in the SAME format the network was
- * trained on: white strokes on black background, background = 0.
- *
- * This file is complete — no TODOs here, it's UI plumbing, not the ML
- * part of the project.
- * -----------------------------------------------------------------------
- */
+// Handles the 280x280 drawing canvas and converts it to a 28x28 pixel
+// array (784 values, 0-1) matching the MNIST format: white on black.
 
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");

@@ -24,13 +24,11 @@ class Network {
     this.biasesO = new Array(outputSize).fill(0);
   }
 
-  // forward pass: pushes the input through both layers and returns every
-  // intermediate value, because trainOne() needs all of them to compute
-  // gradients later. steps:
-  //   1. hidden layer weighted sum = weightsIH · input + biasesH
-  //   2. hidden layer activation = relu(weighted sum)
-  //   3. output layer weighted sum = weightsHO · hiddenActivation + biasesO
-  //   4. output layer activation = softmax(weighted sum) -> the 10 probabilities
+  // push input through both layers, keep everything because backprop needs it
+  // 1. hidden weighted sum: weightsIH · input + biasesH
+  // 2. relu on that -> hiddenActivation
+  // 3. output weighted sum: weightsHO · hiddenActivation + biasesO
+  // 4. softmax on that -> probabilities (the actual prediction)
   forward(input) {
     let hiddenWeightedSum = Matrix.addVectors(matVecMul(this.weightsIH, input), this.biasesH);
     let hiddenActivation = Activations.reluVector(hiddenWeightedSum);
@@ -46,19 +44,14 @@ class Network {
     };
   }
 
-  // one training step (forward + backprop + gradient descent) on a single example.
-  // steps:
-  //   1. forward pass, keep every intermediate value
-  //   2. outputError = prediction - target -> how wrong each output neuron was
-  //      (softmax + cross-entropy simplifies to exactly this, known identity)
-  //   3. output layer gradients: outer(outputError, hiddenActivation) for the
-  //      weights, outputError itself for the biases
-  //   4. push the error back into the hidden layer: multiply by weightsHO
-  //      transposed, then zero out through neurons that relu had already
-  //      cut off (reluDerivativeVector)
-  //   5. hidden layer gradients: same idea, outer(hiddenError, input)
-  //   6. update every weight/bias: subtract learningRate * gradient
-  //   7. return the loss (cross-entropy) so train() can log progress
+  // forward + backprop + gradient descent for one example
+  // 1. forward pass
+  // 2. outputError = prediction - target (this simplifies cleanly with softmax+cross-entropy)
+  // 3. gradients for output layer: outer(outputError, hiddenActivation) for weights, outputError for biases
+  // 4. push error back through weightsHO (transpose), mask with relu derivative
+  // 5. gradients for hidden layer: same pattern, outer(hiddenError, input)
+  // 6. subtract learningRate * gradient from every weight and bias
+  // 7. return cross-entropy loss so train() can track progress
   trainOne(input, target, learningRate) {
     const inter = this.forward(input); // getting all the intermediate values
     const outputError = subtractVectors(inter.outputActivation, target);
@@ -91,9 +84,7 @@ class Network {
     return -target.reduce((sum, t, i) => sum + t * Math.log(inter.outputActivation[i] + 1e-12), 0);
   }
 
-  // trains on a full dataset for a number of epochs. calls trainOne() in a
-  // loop, reshuffling each epoch so the network doesn't always see examples
-  // in the same order (that can bias learning)
+  // train over multiple epochs, shuffle each time so order doesn't bias learning
   train(examples, { epochs = 5, learningRate = 0.1, onEpochEnd } = {}) {
     for (let epoch = 0; epoch < epochs; epoch++) {
       const shuffled = [...examples].sort(() => Math.random() - 0.5);
@@ -106,8 +97,7 @@ class Network {
     }
   }
 
-  // predicts the digit for one input: run forward(), pick the index with
-  // the highest probability
+  // run forward, return the digit with highest probability
   predict(input) {
     const { outputActivation } = this.forward(input);
     let best = 0;
@@ -117,7 +107,7 @@ class Network {
     return { digit: best, probabilities: outputActivation };
   }
 
-  // accuracy over a labeled dataset: percentage of examples predicted correctly
+  // % of examples the network gets right
   evaluate(examples) {
     let correct = 0;
     for (const { input, output } of examples) {
@@ -128,7 +118,7 @@ class Network {
     return correct / examples.length;
   }
 
-  // dumps weights/biases to a plain object, for saving to JSON
+  // serialize to plain object so it can be saved as JSON
   toJSON() {
     return {
       inputSize: this.inputSize,
@@ -141,7 +131,7 @@ class Network {
     };
   }
 
-  // rebuilds a Network from a plain object (see toJSON above)
+  // rebuild from a saved JSON object
   static fromJSON(obj) {
     const net = new Network(obj.inputSize, obj.hiddenSize, obj.outputSize);
     net.weightsIH = obj.weightsIH;

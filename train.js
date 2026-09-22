@@ -1,28 +1,11 @@
-/*
- train.js
- -----------------------------------------------------------------------
- Loads MNIST data, trains the network, prints progress + final accuracy,
- and saves the trained weights to web/weights.json so the browser demo
- * can load them without retraining.
- *
- * Run with:  node train.js
- *
- * This file is already complete — you don't need to edit it. It only
- * becomes useful once forward() and trainOne() in network.js are
- * implemented; until then it will run but predict garbage (~10% accuracy,
- * i.e. random guessing among 10 digits).
- * -----------------------------------------------------------------------
- */
+// Loads MNIST, trains the network, saves weights + loss log to web/.
+// Run with: node train.js
 
 const fs = require("fs");
 const path = require("path");
 const mnist = require("mnist");
 const Network = require("./network");
 
-// Start small on purpose: 2000 training / 500 test examples train in
-// seconds and are enough to see whether your math is working at all.
-// Once forward/backward are correct, bump these up (e.g. 10000 / 2000)
-// for better final accuracy — see the README for guidance.
 const TRAIN_SIZE = 8000
 const TEST_SIZE = 1500;
 const HIDDEN_SIZE = 128;

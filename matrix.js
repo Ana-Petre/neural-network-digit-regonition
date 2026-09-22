@@ -2,7 +2,6 @@
 // vector = plain array of numbers [x1, x2, ...]
 // matrix = array of row-vectors [[row0], [row1], ...]
 
-// already given: empty matrix filled with 0s
 function zeros(rows, cols) {
   const m = [];
   for (let i = 0; i < rows; i++) {
@@ -11,8 +10,7 @@ function zeros(rows, cols) {
   return m;
 }
 
-// already given: matrix filled with small random values (-0.5..0.5 * scale)
-// small on purpose -> big starting weights saturate the activation and training never gets going
+// small on purpose: big starting weights saturate activations and training stalls
 function randomMatrix(rows, cols, scale = 1) {
   const m = [];
   for (let i = 0; i < rows; i++) {

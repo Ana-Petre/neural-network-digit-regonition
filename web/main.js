@@ -1,8 +1,4 @@
-/* Wires everything together: loads the trained network, updates the
- prediction UI whenever the user draws, and renders the training-loss
- chart. Complete — no TODOs.
-
- */
+// Wires drawing → prediction → UI and renders the training-loss chart.
 
 const statusEl = document.getElementById("status");
 const predictedDigitEl = document.getElementById("predictedDigit");
